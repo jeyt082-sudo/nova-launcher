@@ -5,268 +5,397 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101827">
+  <meta name="description" content="Nova Launcher - لانچر شخصی و وب‌اپلیکیشن">
   <title>Nova Launcher</title>
+
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: system-ui, sans-serif;
       color: white;
-      background: linear-gradient(145deg, #111827, #273c75, #6c5ce7);
-      background-attachment: fixed;
+      font-family: Arial, Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at top left, #293c68, transparent 45%),
+        linear-gradient(145deg, #101827, #17152e);
+      padding: 22px 18px 110px;
     }
-    header {
+
+    .status {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 22px 18px 10px;
+      font-size: 14px;
+      opacity: .85;
+      margin-bottom: 35px;
     }
-    .clock { font-size: 32px; font-weight: 700; }
-    .date { opacity: .8; font-size: 13px; }
-    main { padding: 14px; }
-    .search {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #ffffff35;
-      border-radius: 18px;
-      background: #ffffff1a;
-      color: white;
-      font-size: 16px;
-      outline: none;
+
+    header {
+      text-align: center;
+      margin-bottom: 35px;
     }
-    .search::placeholder { color: #ffffffb0; }
-    h3 { margin: 24px 4px 14px; }
+
+    header h1 {
+      font-size: 35px;
+      margin: 0 0 8px;
+    }
+
+    header p {
+      color: #c4c9e8;
+      margin: 0;
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin: 24px 0 15px;
+    }
+
     .apps {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px 12px;
     }
+
     .app {
-      min-height: 105px;
-      padding: 16px 5px;
-      border: 1px solid #ffffff20;
-      border-radius: 20px;
-      background: #ffffff15;
-      color: white;
-      font: inherit;
-      cursor: pointer;
-      text-align: center;
-    }
-    .app:active { transform: scale(.96); }
-    .emoji { display: block; font-size: 32px; margin-bottom: 8px; }
-    .panel {
-      display: none;
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 20px;
-      background: #101827e8;
-      border: 1px solid #ffffff30;
-    }
-    .panel h2 { margin-top: 0; }
-    .panel button, .panel a {
-      display: inline-block;
-      margin: 5px 3px;
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 12px;
-      background: #6c5ce7;
       color: white;
       text-decoration: none;
-      font: inherit;
+      text-align: center;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 15px 5px;
+      min-width: 0;
       cursor: pointer;
     }
-    textarea {
-      width: 100%;
-      min-height: 150px;
-      padding: 12px;
-      border-radius: 12px;
-      font: inherit;
+
+    .app:active {
+      transform: scale(.96);
     }
-    .dock {
-      display: flex;
-      justify-content: space-around;
-      margin: 24px 0 10px;
-      padding: 14px 5px;
-      border-radius: 22px;
-      background: #ffffff18;
+
+    .app-icon {
+      width: 55px;
+      height: 55px;
+      margin: 0 auto 10px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      font-size: 27px;
+      background: linear-gradient(145deg, #7164f5, #4032a8);
     }
-    .dock button {
+
+    .app span:last-child {
+      display: block;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .note {
+      margin-top: 28px;
+      padding: 17px;
+      background: rgba(255,255,255,.07);
+      border-radius: 18px;
+      color: #d5d9f5;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    #installApp {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      width: max-content;
+      max-width: calc(100% - 30px);
+      padding: 15px 24px;
       border: 0;
-      background: transparent;
+      border-radius: 16px;
+      background: #7164f5;
       color: white;
-      font-size: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
       cursor: pointer;
     }
-    .hint { font-size: 12px; opacity: .7; text-align: center; }
+
+    #installApp:active {
+      transform: translateX(-50%) scale(.96);
+    }
+
+    #message {
+      display: none;
+      position: fixed;
+      z-index: 100000;
+      bottom: 85px;
+      left: 15px;
+      right: 15px;
+      padding: 15px;
+      border-radius: 14px;
+      background: #252c46;
+      color: white;
+      line-height: 1.9;
+      white-space: pre-line;
+      box-shadow: 0 5px 25px rgba(0,0,0,.35);
+    }
+
+    #message.show {
+      display: block;
+    }
+
+    .bottom-label {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #b9bfdc;
+      background: rgba(12,15,30,.8);
+      pointer-events: none;
+    }
   </style>
 </head>
+
 <body>
+  <div class="status">
+    <span>Nova OS</span>
+    <span id="clock">--:--</span>
+  </div>
+
   <header>
-    <div>
-      <div class="clock" id="clock">--:--</div>
-      <div class="date" id="date"></div>
-    </div>
-    <div style="font-size:30px">🌤️</div>
+    <h1>Nova Launcher</h1>
+    <p>لانچر شخصی تو، همیشه همراهت</p>
   </header>
 
-  <main>
-    <input class="search" id="search" placeholder="🔎 جست‌وجوی برنامه‌ها..." oninput="filterApps()">
+  <h2 class="section-title">برنامه‌های من</h2>
 
-    <h3>برنامه‌های من</h3>
-    <div class="apps" id="apps">
-      <button class="app" data-name="strike zone بازی" onclick="openGame()">
-        <span class="emoji">🎯</span>Strike Zone
-      </button>
-      <button class="app" data-name="یادداشت notes" onclick="showPanel('notes')">
-        <span class="emoji">📝</span>یادداشت‌ها
-      </button>
-      <button class="app" data-name="ماشین حساب calculator" onclick="showPanel('calc')">
-        <span class="emoji">🧮</span>ماشین حساب
-      </button>
-      <button class="app" data-name="تقویم calendar" onclick="showPanel('calendar')">
-        <span class="emoji">📅</span>تقویم
-      </button>
-      <button class="app" data-name="موسیقی music" onclick="showPanel('music')">
-        <span class="emoji">🎵</span>موسیقی
-      </button>
-      <button class="app" data-name="تنظیمات settings" onclick="showPanel('settings')">
-        <span class="emoji">⚙️</span>تنظیمات
-      </button>
-    </div>
+  <main class="apps">
+    <a class="app" href="https://jeyt082-sudo.github.io/strike-zone/">
+      <span class="app-icon">🎮</span>
+      <span>Strike Zone</span>
+    </a>
 
-    <section class="panel" id="notes">
-      <h2>📝 یادداشت‌ها</h2>
-      <textarea id="noteText" placeholder="یادداشتت رو بنویس..."></textarea>
-      <button onclick="saveNote()">ذخیره یادداشت</button>
-      <button onclick="closePanels()">بستن</button>
-      <p id="saveStatus"></p>
-    </section>
+    <button class="app" type="button" onclick="openNotes()">
+      <span class="app-icon">📝</span>
+      <span>یادداشت‌ها</span>
+    </button>
 
-    <section class="panel" id="calc">
-      <h2>🧮 ماشین حساب</h2>
-      <input class="search" id="calcInput" placeholder="مثلاً 12*(5+2)">
-      <button onclick="calculate()">محاسبه</button>
-      <p id="calcResult">نتیجه: —</p>
-      <button onclick="closePanels()">بستن</button>
-    </section>
+    <button class="app" type="button" onclick="openCalculator()">
+      <span class="app-icon">🧮</span>
+      <span>ماشین‌حساب</span>
+    </button>
 
-    <section class="panel" id="calendar">
-      <h2>📅 تقویم</h2>
-      <p id="calendarDate"></p>
-      <button onclick="closePanels()">بستن</button>
-    </section>
+    <button class="app" type="button" onclick="openCalendar()">
+      <span class="app-icon">📅</span>
+      <span>تقویم</span>
+    </button>
 
-    <section class="panel" id="music">
-      <h2>🎵 موسیقی</h2>
-      <p>برای پخش موسیقی، فایل صوتی دلخواهت رو از گوشی انتخاب کن.</p>
-      <input type="file" accept="audio/*" id="audioFile">
-      <audio id="audioPlayer" controls style="width:100%;margin-top:12px"></audio>
-      <button onclick="closePanels()">بستن</button>
-    </section>
+    <button class="app" type="button" onclick="openMusic()">
+      <span class="app-icon">🎵</span>
+      <span>موسیقی</span>
+    </button>
 
-    <section class="panel" id="settings">
-      <h2>⚙️ تنظیمات</h2>
-      <p>پس‌زمینه لانچر رو تغییر بده:</p>
-      <button onclick="setTheme(1)">آبی</button>
-      <button onclick="setTheme(2)">بنفش</button>
-      <button onclick="setTheme(3)">سبز</button>
-      <button onclick="closePanels()">بستن</button>
-    </section>
-
-    <div class="dock">
-      <button onclick="home()" title="خانه">🏠</button>
-      <button onclick="openGame()" title="بازی">🎯</button>
-      <button onclick="showPanel('settings')" title="تنظیمات">⚙️</button>
-    </div>
-    <p class="hint">Nova Launcher • نسخه وب</p>
+    <button class="app" type="button" onclick="openSettings()">
+      <span class="app-icon">⚙️</span>
+      <span>تنظیمات</span>
+    </button>
   </main>
 
+  <div class="note">
+    <strong>به Nova Launcher خوش آمدی!</strong>
+    <br>
+    برای باز کردن بازی Strike Zone روی آیکون آن بزن.
+    برای نصب لانچر روی صفحه اصلی، دکمه نصب پایین صفحه را بزن.
+  </div>
+
+  <div id="message" role="status" aria-live="polite"></div>
+
+  <button id="installApp" type="button" onclick="installNova()">
+    📲 نصب Nova Launcher
+  </button>
+
+  <div class="bottom-label">Nova Launcher • نسخه وب</div>
+
   <script>
-    const GAME_URL = "https://jeyt082-sudo.github.io/strike-zone/";
+    const installButton = document.getElementById("installApp");
+    const messageBox = document.getElementById("message");
 
-    function updateClock() {
-      const now = new Date();
-      document.getElementById("clock").textContent =
-        now.toLocaleTimeString("fa-IR", {hour:"2-digit", minute:"2-digit"});
-      document.getElementById("date").textContent =
-        now.toLocaleDateString("fa-IR", {weekday:"long", day:"numeric", month:"long"});
-      document.getElementById("calendarDate").textContent =
-        now.toLocaleDateString("fa-IR", {year:"numeric", month:"long", day:"numeric"});
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
+    let installPrompt = null;
+    let messageTimer = null;
 
-    function openGame() {
-      window.open(GAME_URL, "_blank");
+    function showMessage(text) {
+      messageBox.textContent = text;
+      messageBox.classList.add("show");
+
+      clearTimeout(messageTimer);
+      messageTimer = setTimeout(() => {
+        messageBox.classList.remove("show");
+      }, 8000);
     }
 
-    function showPanel(id) {
-      closePanels();
-      document.getElementById(id).style.display = "block";
-      document.getElementById(id).scrollIntoView({behavior:"smooth", block:"nearest"});
+    function isInstalled() {
+      return window.matchMedia("(display-mode: standalone)").matches ||
+             window.matchMedia("(display-mode: fullscreen)").matches ||
+             window.navigator.standalone === true;
     }
 
-    function closePanels() {
-      document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
-    }
-
-    function home() {
-      closePanels();
-      document.getElementById("search").value = "";
-      filterApps();
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function filterApps() {
-      const query = document.getElementById("search").value.toLowerCase();
-      document.querySelectorAll(".app").forEach(app => {
-        app.style.display = app.dataset.name.toLowerCase().includes(query) ? "" : "none";
-      });
-    }
-
-    function saveNote() {
-      try {
-        localStorage.setItem("nova-note", document.getElementById("noteText").value);
-        document.getElementById("saveStatus").textContent = "یادداشت ذخیره شد ✅";
-      } catch(e) {
-        document.getElementById("saveStatus").textContent = "ذخیره‌سازی در این مرورگر در دسترس نیست.";
+    function updateInstallButton() {
+      if (isInstalled()) {
+        installButton.style.display = "none";
+      } else {
+        installButton.style.display = "block";
       }
     }
 
-    try {
-      document.getElementById("noteText").value = localStorage.getItem("nova-note") || "";
-    } catch(e) {}
-
-    function calculate() {
-      const input = document.getElementById("calcInput").value.trim();
-      if (!input || !/^[0-9+\-*/().%\s]+$/.test(input)) {
-        document.getElementById("calcResult").textContent = "عبارت ریاضی معتبر وارد کن.";
-        return;
-      }
-      try {
-        const result = Function('"use strict"; return (' + input + ')')();
-        document.getElementById("calcResult").textContent =
-          Number.isFinite(result) ? "نتیجه: " + result : "عبارت قابل محاسبه نیست.";
-      } catch(e) {
-        document.getElementById("calcResult").textContent = "عبارت ریاضی درست نیست.";
-      }
-    }
-
-    document.getElementById("audioFile").addEventListener("change", function() {
-      if (this.files && this.files[0]) {
-        document.getElementById("audioPlayer").src = URL.createObjectURL(this.files[0]);
-      }
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      installPrompt = event;
+      updateInstallButton();
     });
 
-    function setTheme(theme) {
-      const backgrounds = {
-        1: "linear-gradient(145deg,#111827,#273c75,#6c5ce7)",
-        2: "linear-gradient(145deg,#2d0b48,#6c3483,#e056fd)",
-        3: "linear-gradient(145deg,#0b3d2e,#16875d,#80cfa9)"
-      };
-      document.body.style.background = backgrounds[theme];
-      document.body.style.backgroundAttachment = "fixed";
+    window.addEventListener("appinstalled", () => {
+      installPrompt = null;
+      installButton.style.display = "none";
+      showMessage("Nova Launcher با موفقیت نصب شد!");
+    });
+
+    async function installNova() {
+      if (isInstalled()) {
+        installButton.style.display = "none";
+        showMessage("Nova Launcher از قبل نصب شده است.");
+        return;
+      }
+
+      if (installPrompt) {
+        installButton.disabled = true;
+
+        try {
+          await installPrompt.prompt();
+          const choice = await installPrompt.userChoice;
+
+          if (choice && choice.outcome === "accepted") {
+            showMessage("درخواست نصب تأیید شد.");
+          } else {
+            showMessage("نصب انجام نشد. هر وقت خواستی دوباره امتحان کن.");
+          }
+        } catch (error) {
+          showMessage(
+            "نصب خودکار در دسترس نیست.\n" +
+            "منوی مرورگر را باز کن و گزینه نصب را انتخاب کن."
+          );
+        } finally {
+          installPrompt = null;
+          installButton.disabled = false;
+          updateInstallButton();
+        }
+
+        return;
+      }
+
+      showMessage(
+        "برای افزودن Nova Launcher به صفحه اصلی:\n\n" +
+        "۱. سایت را با Chrome باز کن.\n" +
+        "۲. منوی سه‌نقطه مرورگر را باز کن.\n" +
+        "۳. گزینه Install app یا Add to Home screen را بزن.\n" +
+        "۴. افزودن یا نصب را تأیید کن.\n\n" +
+        "اگر گزینه نصب وجود ندارد، کمی بعد دوباره امتحان کن یا Chrome را به‌روز کن."
+      );
+    }
+
+    function openNotes() {
+      const saved = localStorage.getItem("nova-notes") || "";
+      const text = prompt("یادداشتت را بنویس:", saved);
+
+      if (text !== null) {
+        localStorage.setItem("nova-notes", text);
+        showMessage("یادداشت ذخیره شد.");
+      }
+    }
+
+    function openCalculator() {
+      const first = prompt("عدد اول را وارد کن:");
+      if (first === null || first.trim() === "") return;
+
+      const second = prompt("عدد دوم را وارد کن:");
+      if (second === null || second.trim() === "") return;
+
+      const a = Number(first);
+      const b = Number(second);
+
+      if (!Number.isFinite(a) || !Number.isFinite(b)) {
+        showMessage("لطفاً عدد معتبر وارد کن.");
+        return;
+      }
+
+      const operation = prompt("عملیات را انتخاب کن: +  -  *  /", "+");
+      let result;
+
+      switch (operation) {
+        case "+": result = a + b; break;
+        case "-": result = a - b; break;
+        case "*": result = a * b; break;
+        case "/":
+          if (b === 0) {
+            showMessage("تقسیم بر صفر امکان‌پذیر نیست.");
+            return;
+          }
+          result = a / b;
+          break;
+        default:
+          showMessage("عملیات معتبر نیست.");
+          return;
+      }
+
+      showMessage("نتیجه: " + result);
+    }
+
+    function openCalendar() {
+      showMessage("امروز: " + new Date().toLocaleDateString("fa-IR"));
+    }
+
+    function openMusic() {
+      showMessage("برای پخش موسیقی هنوز باید فایل یا سرویس موسیقی اضافه شود.");
+    }
+
+    function openSettings() {
+      const choice = confirm("می‌خواهی رنگ پس‌زمینه را تغییر بدهی؟");
+
+      if (choice) {
+        document.body.style.background =
+          "linear-gradient(145deg, #172d2a, #101827)";
+      }
+    }
+
+    function updateClock() {
+      document.getElementById("clock").textContent =
+        new Date().toLocaleTimeString("fa-IR", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+    }
+
+    updateClock();
+    setInterval(updateClock, 30000);
+    updateInstallButton();
+
+    window.addEventListener("pageshow", updateInstallButton);
+    window.matchMedia("(display-mode: standalone)").addEventListener?.(
+      "change",
+      updateInstallButton
+    );
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .catch(error => console.error("Service Worker error:", error));
+      });
     }
   </script>
 </body>
