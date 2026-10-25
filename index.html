@@ -1,165 +1,29 @@
 
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101827">
-<link rel="manifest" href="./manifest.json">
-<title>Nova OS</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:linear-gradient(145deg,#101827,#24204b);color:white;font-family:Tahoma,Arial,sans-serif;min-height:100vh;padding:20px 16px 35px}
-header{text-align:center;padding:22px 0}
-header h1{font-size:34px;margin:8px}
-header p{color:#c6c9eb}
-#clock{display:flex;justify-content:space-between;color:#d6d9f4}
-.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
-.app{background:#ffffff12;border:1px solid #ffffff15;border-radius:20px;padding:17px 4px;color:white;text-align:center;font:inherit;cursor:pointer;min-height:112px}
-.app:active{transform:scale(.96)}
-.icon{font-size:34px;display:block;margin-bottom:10px}
-.app small{font-size:12px}
-#screen{display:none;margin-top:25px;background:#ffffff10;border:1px solid #ffffff20;border-radius:22px;padding:18px}
-#screen h2{margin-top:0}
-#screen input,#screen textarea{width:100%;padding:12px;margin:7px 0;border-radius:10px;border:0;font:inherit}
-#screen textarea{min-height:180px;resize:vertical}
-.action{background:#7164f5;color:white;border:0;padding:12px 16px;border-radius:12px;font:inherit;margin:5px 3px;cursor:pointer}
-.secondary{background:#454966}
-#result{font-size:23px;overflow-wrap:anywhere;margin:16px 0}
-.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.pad button{font-size:20px;padding:15px 0;border:0;border-radius:12px;background:#343653;color:white}
-footer{text-align:center;color:#aeb4d7;font-size:12px;margin-top:28px}
-</style>
-</head>
-<body>
-<div id="clock"><span>Nova OS</span><span id="time"></span></div>
+<div id="launcherChooser" style="max-width:420px;margin:40px auto;padding:24px;text-align:center;background:#171a2b;color:white;border-radius:24px;font-family:Arial,sans-serif">
+  <h1 style="font-size:28px">Select Launcher</h1>
+  <p style="color:#b9c4e8">Choose your launcher</p>
 
-<header>
-<h1>Nova Launcher</h1>
-<p>لانچر شخصی تو، همیشه همراهت ✨</p>
-</header>
+  <button onclick="selectLauncher('POCO Launcher')" style="display:block;width:100%;padding:18px;margin:14px 0;border:1px solid #ffffff22;border-radius:16px;background:#293557;color:white;font-size:18px">
+    📱 POCO Launcher
+  </button>
 
-<h3>برنامه‌های من</h3>
-<div class="apps">
-<a class="app" href="https://jeyt082-sudo.github.io/strike-zone/" style="text-decoration:none">
-<span class="icon">🎮</span><small>Strike Zone</small>
-</a>
-<button class="app" onclick="openApp('notes')"><span class="icon">📝</span><small>یادداشت‌ها</small></button>
-<button class="app" onclick="openApp('calc')"><span class="icon">🧮</span><small>ماشین‌حساب</small></button>
-<button class="app" onclick="openApp('calendar')"><span class="icon">📅</span><small>تقویم</small></button>
-<button class="app" onclick="openApp('music')"><span class="icon">🎵</span><small>موسیقی</small></button>
-<button class="app" onclick="openApp('settings')"><span class="icon">⚙️</span><small>تنظیمات</small></button>
+  <button onclick="selectLauncher('Nova Launcher')" style="display:block;width:100%;padding:18px;margin:14px 0;border:1px solid #ffffff22;border-radius:16px;background:#293557;color:white;font-size:18px">
+    🚀 Nova Launcher
+  </button>
+
+  <p id="launcherMessage" style="color:#aab7ff"></p>
 </div>
 
-<section id="screen">
-<button class="action secondary" onclick="closeApp()">← برگشت به صفحه اصلی</button>
-<div id="content"></div>
-</section>
-
-<footer>Nova Launcher • نسخه وب</footer>
-
 <script>
-const screen=document.getElementById('screen');
-const content=document.getElementById('content');
+function selectLauncher(name) {
+  document.getElementById('launcherMessage').textContent =
+    'انتخاب شد: ' + name;
 
-function tick(){
- document.getElementById('time').textContent=new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
-}
-tick();setInterval(tick,1000);
-
-function openApp(name){
- screen.style.display='block';
- if(name==='notes'){
-  content.innerHTML=`
-   <h2>📝 یادداشت‌ها</h2>
-   <textarea id="notesText" placeholder="یادداشتت را اینجا بنویس..."></textarea>
-   <button class="action" onclick="saveNotes()">ذخیره یادداشت</button>
-   <span id="noteStatus"></span>`;
-  document.getElementById('notesText').value=localStorage.getItem('novaNotes')||'';
- }
- if(name==='calc'){
-  content.innerHTML=`
-   <h2>🧮 ماشین‌حساب</h2>
-   <input id="display" placeholder="مثلاً 12+8*2" inputmode="decimal" dir="ltr">
-   <div class="pad">
-    ${['7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+'].map(k=>`<button onclick="calcKey('${k}')">${k}</button>`).join('')}
-   </div>
-   <button class="action secondary" onclick="document.getElementById('display').value=''">پاک کردن</button>
-   <p id="calcResult"></p>`;
- }
- if(name==='calendar'){
-  content.innerHTML=`<h2>📅 تقویم</h2>
-   <p>امروز</p><h2>${new Date().toLocaleDateString('fa-IR',{dateStyle:'full'})}</h2>
-   <p>تاریخ میلادی: ${new Date().toLocaleDateString('en-GB',{dateStyle:'full'})}</p>`;
- }
- if(name==='music'){
-  content.innerHTML=`<h2>🎵 موسیقی</h2>
-   <p>یک فایل صوتی از گوشی انتخاب کن تا اینجا پخش شود.</p>
-   <input type="file" id="audioFile" accept="audio/*">
-   <audio id="player" controls style="width:100%;margin-top:15px"></audio>`;
-  document.getElementById('audioFile').addEventListener('change',function(){
-   if(this.files&&this.files[0]){
-    document.getElementById('player').src=URL.createObjectURL(this.files[0]);
-    document.getElementById('player').play().catch(()=>{});
-   }
-  });
- }
- if(name==='settings'){
-  content.innerHTML=`<h2>⚙️ تنظیمات</h2>
-   <p>رنگ پس‌زمینه را انتخاب کن:</p>
-   <button class="action" onclick="setTheme('#101827','#24204b')">بنفش</button>
-   <button class="action" onclick="setTheme('#062e2a','#11665b')">سبز</button>
-   <button class="action" onclick="setTheme('#172033','#45536e')">آبی</button>
-   <button class="action" onclick="setTheme('#242424','#090909')">تیره</button>
-   <p>نام: Nova Launcher</p>
-   <p>نسخه: 2.0</p>`;
- }
- screen.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function closeApp(){
- screen.style.display='none';
- content.innerHTML='';
- window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function saveNotes(){
- localStorage.setItem('novaNotes',document.getElementById('notesText').value);
- document.getElementById('noteStatus').textContent=' ذخیره شد ✓';
-}
-
-function calcKey(key){
- const d=document.getElementById('display');
- if(key==='='){
-  try{
-   const expression=d.value.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
-   if(!expression||!/^[0-9+\-*/().\s]+$/.test(expression))throw Error();
-   const result=Function('"use strict";return ('+expression+')')();
-   if(!Number.isFinite(result))throw Error();
-   d.value=String(result);
-  }catch(e){
-   document.getElementById('calcResult').textContent='عبارت ریاضی معتبر نیست';
+  if (name === 'Nova Launcher') {
+    window.location.href = 'https://jeyt082-sudo.github.io/nova-launcher/';
+  } else {
+    document.getElementById('launcherMessage').textContent =
+      'برای باز کردن POCO Launcher واقعی، از تنظیمات گوشی استفاده کن.';
   }
- }else{
-  d.value+=key;
- }
-}
-
-function setTheme(a,b){
- document.body.style.background=`linear-gradient(145deg,${a},${b})`;
- localStorage.setItem('novaTheme',JSON.stringify([a,b]));
-}
-
-try{
- const theme=JSON.parse(localStorage.getItem('novaTheme'));
- if(theme)setTheme(theme[0],theme[1]);
-}catch(e){}
-
-if('serviceWorker' in navigator){
- window.addEventListener('load',()=>{
-  navigator.serviceWorker.register('./sw.js').catch(console.error);
- });
 }
 </script>
-</body>
-</html>
