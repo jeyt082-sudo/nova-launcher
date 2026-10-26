@@ -57,6 +57,11 @@ jobs:
           package com.nova.launcher;
 
           import android.app.Activity;
+          import android.app.role.RoleManager;
+          import android.content.Context;
+          import android.os.Build;
+          import android.provider.Settings;
+          import android.widget.Toast;
           import android.content.Intent;
           import android.net.Uri;
           import android.os.Bundle;
@@ -65,6 +70,28 @@ jobs:
 
           public class MainActivity extends Activity {
               WebView web; ValueCallback<Uri[]> cb;
+              class Bridge {
+                  @JavascriptInterface public void setDefault() {
+                      runOnUiThread(() -> {
+                          try {
+                              if (Build.VERSION.SDK_INT >= 29) {
+                                  RoleManager rm = (RoleManager) getSystemService(Context.ROLE_SERVICE);
+                                  if (rm.isRoleHeld(RoleManager.ROLE_HOME)) {
+                                      Toast.makeText(MainActivity.this, "Nova Launcher is already the default", Toast.LENGTH_LONG).show();
+                                      return;
+                                  }
+                                  if (rm.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                                      startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_HOME), 2);
+                                      return;
+                                  }
+                              }
+                              startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+                          } catch (Exception e) {
+                              try { startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)); } catch (Exception e2) {}
+                          }
+                      });
+                  }
+              }
               @Override protected void onCreate(Bundle b) {
                   super.onCreate(b);
                   web = new WebView(this);
@@ -89,6 +116,7 @@ jobs:
                           startActivityForResult(i, 1); return true;
                       }
                   });
+                  web.addJavascriptInterface(new Bridge(), "NovaApp");
                   web.loadUrl("file:///android_asset/index.html");
               }
               @Override protected void onActivityResult(int rq, int rs, Intent d) {
@@ -110,6 +138,16 @@ jobs:
               @Override public void onBackPressed() { /* launcher: stay home */ web.evaluateJavascript("document.querySelectorAll('.win.open').forEach(w=>w.classList.remove('open'))", null); }
           }
           EOF_NOVA
+          python3 - <<'EOF_PY'
+          p = "app/src/main/assets/index.html"
+          h = open(p, encoding="utf-8").read()
+          btn = '<button id="mkdef" class="row" style="width:100%;border:0;color:inherit;font:inherit;text-align:right;cursor:pointer">⭐ تنظیم به‌عنوان لانچر پیش‌فرض</button>'
+          h = h.replace('<div class="row">تم پس‌زمینه</div>', btn + '<div class="row">تم پس‌زمینه</div>', 1)
+          js = "document.getElementById('mkdef').onclick=function(){if(window.NovaApp){NovaApp.setDefault()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};"
+          i = h.rfind('</script>')
+          h = h[:i] + js + '\n' + h[i:]
+          open(p, "w", encoding="utf-8").write(h)
+          EOF_PY
       - run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with: { name: NovaLauncher-apk, path: app/build/outputs/apk/debug/app-debug.apk }
