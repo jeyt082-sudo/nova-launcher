@@ -71,6 +71,17 @@ jobs:
           public class MainActivity extends Activity {
               WebView web; ValueCallback<Uri[]> cb;
               class Bridge {
+                  @JavascriptInterface public void openHomeSettings() {
+                      runOnUiThread(() -> {
+                          try {
+                              startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+                          } catch (Exception e) {
+                              try { startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)); } catch (Exception e2) {
+                                  try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception e3) {}
+                              }
+                          }
+                      });
+                  }
                   @JavascriptInterface public void setDefault() {
                       runOnUiThread(() -> {
                           try {
@@ -141,9 +152,11 @@ jobs:
           python3 - <<'EOF_PY'
           p = "app/src/main/assets/index.html"
           h = open(p, encoding="utf-8").read()
-          btn = '<button id="mkdef" class="row" style="width:100%;border:0;color:inherit;font:inherit;text-align:right;cursor:pointer">⭐ تنظیم به‌عنوان لانچر پیش‌فرض</button>'
-          h = h.replace('<div class="row">تم پس‌زمینه</div>', btn + '<div class="row">تم پس‌زمینه</div>', 1)
-          js = "document.getElementById('mkdef').onclick=function(){if(window.NovaApp){NovaApp.setDefault()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};"
+          st = 'style="width:100%;border:0;color:inherit;font:inherit;text-align:right;cursor:pointer"'
+          btn1 = '<button id="mkdef" class="row" ' + st + '>⭐ تنظیم به‌عنوان لانچر پیش‌فرض</button>'
+          btn2 = '<button id="goback" class="row" ' + st + '>↩ بازگشت به لانچر قبلی</button>'
+          h = h.replace('<div class="row">تم پس‌زمینه</div>', btn1 + btn2 + '<div class="row">تم پس‌زمینه</div>', 1)
+          js = "document.getElementById('mkdef').onclick=function(){if(window.NovaApp){NovaApp.setDefault()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};document.getElementById('goback').onclick=function(){if(window.NovaApp){NovaApp.openHomeSettings()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};"
           i = h.rfind('</script>')
           h = h[:i] + js + '\n' + h[i:]
           open(p, "w", encoding="utf-8").write(h)
