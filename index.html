@@ -1,29 +1,183 @@
 
-<div id="launcherChooser" style="max-width:420px;margin:40px auto;padding:24px;text-align:center;background:#171a2b;color:white;border-radius:24px;font-family:Arial,sans-serif">
-  <h1 style="font-size:28px">Select Launcher</h1>
-  <p style="color:#b9c4e8">Choose your launcher</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<title>Nova Launcher</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2638;--accent:#7c5cff;--text:#f4f6ff;--muted:#aab5ca}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{padding:22px 18px;background:#151f30;display:flex;align-items:center;justify-content:space-between}
+h1{font-size:23px;margin:0}
+main{padding:18px;max-width:700px;margin:auto}
+h2{font-size:19px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.app,button{border:0;border-radius:15px;background:var(--panel);color:var(--text);padding:16px 8px;font-size:15px;cursor:pointer}
+.app{min-height:95px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.app span{font-size:27px}
+button.primary{background:var(--accent)}
+button.secondary{background:#27344a}
+.panel{background:var(--panel);border-radius:16px;padding:16px;margin:14px 0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:14px;line-height:1.5}
+.back{margin-bottom:16px}
+input,textarea{width:100%;padding:12px;border:1px solid #3a4860;border-radius:10px;background:#101827;color:white}
+#message{margin-top:12px;color:#b8c8ff}
+@media(max-width:360px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚀 Nova Launcher</h1>
+  <button class="secondary" onclick="showPage('settings')">⚙️ Settings</button>
+</header>
 
-  <button onclick="selectLauncher('POCO Launcher')" style="display:block;width:100%;padding:18px;margin:14px 0;border:1px solid #ffffff22;border-radius:16px;background:#293557;color:white;font-size:18px">
-    📱 POCO Launcher
-  </button>
+<main>
+  <section id="home">
+    <h2>My Apps</h2>
+    <p class="muted">Welcome to your Nova home screen.</p>
+    <div class="grid">
+      <button class="app" onclick="openApp('Notes')"><span>📝</span>Notes</button>
+      <button class="app" onclick="openApp('Calculator')"><span>🧮</span>Calculator</button>
+      <button class="app" onclick="openApp('Calendar')"><span>📅</span>Calendar</button>
+      <button class="app" onclick="openApp('Music')"><span>🎵</span>Music</button>
+      <button class="app" onclick="openApp('Clock')"><span>🕒</span>Clock</button>
+      <button class="app" onclick="openApp('Camera')"><span>📷</span>Camera</button>
+      <button class="app" onclick="openApp('Gallery')"><span>🖼️</span>Gallery</button>
+      <button class="app" onclick="openApp('Games')"><span>🎮</span>Games</button>
+      <button class="app" onclick="showPage('settings')"><span>⚙️</span>Settings</button>
+    </div>
+  </section>
 
-  <button onclick="selectLauncher('Nova Launcher')" style="display:block;width:100%;padding:18px;margin:14px 0;border:1px solid #ffffff22;border-radius:16px;background:#293557;color:white;font-size:18px">
-    🚀 Nova Launcher
-  </button>
+  <section id="settings" class="hidden">
+    <button class="secondary back" onclick="showPage('home')">← Back</button>
+    <h2>Settings</h2>
+    <div class="panel">
+      <div class="row">
+        <div><b>Select Launcher</b><div class="muted">Choose a launcher option</div></div>
+        <button class="primary" onclick="showPage('launcher')">Open</button>
+      </div>
+    </div>
+    <div class="panel">
+      <b>About Nova</b>
+      <p class="muted">Nova Launcher web app</p>
+      <button class="secondary" onclick="showPage('home')">Home Screen</button>
+    </div>
+  </section>
 
-  <p id="launcherMessage" style="color:#aab7ff"></p>
-</div>
+  <section id="launcher" class="hidden">
+    <button class="secondary back" onclick="showPage('settings')">← Back to Settings</button>
+    <h2>Select Launcher</h2>
+    <p class="muted">Choose which launcher you want to open.</p>
+    <div class="panel">
+      <div class="row">
+        <div><b>📱 POCO Launcher</b><div class="muted">Your phone's built-in launcher</div></div>
+        <button class="secondary" onclick="pocoLauncher()">Select</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row">
+        <div><b>🚀 Nova Launcher</b><div class="muted">Nova web app</div></div>
+        <button class="primary" onclick="showPage('home')">Select</button>
+      </div>
+    </div>
+    <p id="message" class="muted"></p>
+  </section>
+
+  <section id="appPage" class="hidden">
+    <button class="secondary back" onclick="showPage('home')">← Home</button>
+    <h2 id="appTitle">App</h2>
+    <div id="appContent" class="panel"></div>
+  </section>
+</main>
 
 <script>
-function selectLauncher(name) {
-  document.getElementById('launcherMessage').textContent =
-    'انتخاب شد: ' + name;
-
-  if (name === 'Nova Launcher') {
-    window.location.href = 'https://jeyt082-sudo.github.io/nova-launcher/';
-  } else {
-    document.getElementById('launcherMessage').textContent =
-      'برای باز کردن POCO Launcher واقعی، از تنظیمات گوشی استفاده کن.';
+function showPage(name){
+  ['home','settings','launcher','appPage'].forEach(id=>{
+    document.getElementById(id).classList.toggle('hidden',id!==name);
+  });
+  if(name==='launcher') document.getElementById('message').textContent='';
+}
+function pocoLauncher(){
+  document.getElementById('message').textContent=
+  'To switch to POCO Launcher, open your phone Settings → Apps → Default apps → Launcher. Menu names may vary by device.';
+}
+function openApp(name){
+  document.getElementById('appTitle').textContent=name;
+  const content=document.getElementById('appContent');
+  content.innerHTML='';
+  if(name==='Notes'){
+    const area=document.createElement('textarea');
+    area.rows=8;area.placeholder='Write your notes here...';
+    area.value=localStorage.getItem('nova-notes')||'';
+    area.addEventListener('input',()=>localStorage.setItem('nova-notes',area.value));
+    content.append(area);
+  }else if(name==='Calculator'){
+    const input=document.createElement('input');
+    input.placeholder='Example: 12*(4+2)';
+    const result=document.createElement('p');
+    const btn=document.createElement('button');
+    btn.className='primary';btn.textContent='Calculate';
+    btn.onclick=()=>{
+      if(!/^[0-9+\-*/().%\s]+$/.test(input.value)){
+        result.textContent='Enter a valid arithmetic expression.';return;
+      }
+      try{
+        const answer=Function('"use strict";return ('+input.value+')')();
+        result.textContent=Number.isFinite(answer)?String(answer):'Invalid calculation';
+      }catch(e){result.textContent='Invalid calculation';}
+    };
+    content.append(input,btn,result);
+  }else if(name==='Calendar'){
+    const date=document.createElement('input');date.type='date';
+    const note=document.createElement('input');note.placeholder='Event or reminder';
+    content.append(date,note);
+  }else if(name==='Games'){
+    const link=document.createElement('a');
+    link.href='https://jeyt082-sudo.github.io/strike-zone/';
+    link.textContent='Open Strike Zone game';link.style.color='#b8c8ff';
+    content.append(link);
+  }else if(name==='Camera'){
+    const btn=document.createElement('button');btn.className='primary';btn.textContent='Open Camera';
+    const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.style.width='100%';
+    btn.onclick=async()=>{
+      try{video.srcObject=await navigator.mediaDevices.getUserMedia({video:true});}
+      catch(e){content.append(document.createTextNode('Camera permission was denied or unavailable.'));}
+    };
+    content.append(btn,video);
+  }else if(name==='Gallery'){
+    const input=document.createElement('input');input.type='file';input.accept='image/*';input.multiple=true;
+    const images=document.createElement('div');images.className='grid';
+    input.onchange=()=>{
+      images.innerHTML='';
+      [...input.files].forEach(file=>{
+        const img=document.createElement('img');img.src=URL.createObjectURL(file);
+        img.style.width='100%';img.style.borderRadius='12px';images.append(img);
+      });
+    };
+    content.append(input,images);
+  }else if(name==='Music'){
+    const input=document.createElement('input');input.type='file';input.accept='audio/*';
+    const audio=document.createElement('audio');audio.controls=true;audio.style.width='100%';
+    input.onchange=()=>{if(input.files[0])audio.src=URL.createObjectURL(input.files[0]);};
+    content.append(input,audio);
+  }else if(name==='Clock'){
+    const p=document.createElement('p');
+    function update(){p.textContent=new Date().toLocaleTimeString();}
+    update();setInterval(update,1000);content.append(p);
+  }else{
+    content.textContent=name+' app';
   }
+  showPage('appPage');
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 </script>
+</body>
+</html>
