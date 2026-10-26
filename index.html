@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nova Launcher</title>
+<style>
+:root{--bg1:#1b2a49;--bg2:#6a3d9a;--fg:#fff;--glass:rgba(255,255,255,.16);--panel:#fff;--ptext:#1a1a1a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-t="green"]{--bg1:#0f3d2e;--bg2:#2a9d6f}
+:root[data-t="sunset"]{--bg1:#7a1f3d;--bg2:#f08a4b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--panel:#20242c;--ptext:#f1f1f1}}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:Tahoma,"Vazirmatn",system-ui,sans-serif;color:var(--fg);overflow:hidden}
+body{background:linear-gradient(160deg,var(--bg1),var(--bg2))}
+#phone{height:100%;max-width:480px;margin:auto;display:flex;flex-direction:column;position:relative}
+#status{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px}
+#clock{text-align:center;padding:10px 0 6px}
+#time{font-size:64px;font-weight:200;direction:ltr}
+#date{opacity:.85;font-size:15px}
+#search{margin:12px 20px;padding:12px 16px;border-radius:24px;background:var(--glass);border:0;color:var(--fg);font:inherit;width:calc(100% - 40px);outline:none}
+#search::placeholder{color:rgba(255,255,255,.7)}
+#pages{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;direction:ltr}
+#pages::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:92px;gap:6px;padding:10px 14px;align-content:start;direction:rtl}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:var(--fg);font:inherit;font-size:12px;cursor:pointer}
+.ic{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-size:28px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.app:active .ic{transform:scale(.92)}
+#dots{display:flex;justify-content:center;gap:6px;padding:6px}
+#dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)}
+#dots i.on{background:#fff}
+#dock{margin:6px 14px 14px;padding:10px;border-radius:26px;background:var(--glass);display:flex;justify-content:space-around;backdrop-filter:blur(12px)}
+.win{position:absolute;inset:0;background:var(--panel);color:var(--ptext);display:none;flex-direction:column;z-index:5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.win.open{display:flex;animation:up .2s}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+.bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(128,128,128,.25);font-weight:bold}
+.bar button{background:none;border:0;font-size:22px;color:inherit;cursor:pointer}
+.body{flex:1;overflow:auto;padding:16px}
+textarea{width:100%;height:100%;border:0;background:transparent;color:inherit;font:inherit;font-size:16px;resize:none;outline:none}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;direction:ltr}
+.calc button{padding:18px 0;font-size:20px;border:0;border-radius:14px;background:rgba(128,128,128,.18);color:inherit;cursor:pointer}
+.calc button.op{background:#6a3d9a;color:#fff}
+#cout{direction:ltr;text-align:right;font-size:38px;min-height:60px;margin-bottom:12px;word-break:break-all}
+.opt{display:flex;gap:10px;margin:10px 0}
+.opt button{flex:1;padding:14px;border-radius:12px;border:2px solid transparent;color:#fff;font:inherit;cursor:pointer}
+.row{padding:12px;border-radius:12px;background:rgba(128,128,128,.14);margin:8px 0}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal span{padding:8px 0;border-radius:8px}
+.cal .today{background:#6a3d9a;color:#fff}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="status"><span id="net">Nova Launcher</span><span id="bat">🔋 ۱۰۰٪</span></div>
+  <div id="clock"><div id="time"></div><div id="date"></div></div>
+  <input id="search" placeholder="جستجوی برنامه‌ها یا وب…" autocomplete="off">
+  <div id="pages"></div>
+  <div id="dots"></div>
+  <div id="dock"></div>
+
+  <div class="win" id="w-notes"><div class="bar"><button data-close>→</button>یادداشت‌ها</div><div class="body"><textarea id="notes" placeholder="اینجا بنویسید…"></textarea></div></div>
+  <div class="win" id="w-calc"><div class="bar"><button data-close>→</button>ماشین‌حساب</div><div class="body"><div id="cout">0</div><div class="calc" id="ckeys"></div></div></div>
+  <div class="win" id="w-cal"><div class="bar"><button data-close>→</button>تقویم</div><div class="body"><h3 id="cal-h" style="margin-bottom:12px"></h3><div class="cal" id="cal"></div></div></div>
+  <div class="win" id="w-music"><div class="bar"><button data-close>→</button>موسیقی</div><div class="body"><p style="margin-bottom:10px">یک فایل صوتی از گوشی انتخاب کنید:</p><input type="file" id="mfile" accept="audio/*" multiple><div id="mlist"></div><audio id="player" controls style="width:100%;margin-top:14px"></audio></div></div>
+  <div class="win" id="w-set"><div class="bar"><button data-close>→</button>تنظیمات</div><div class="body"><div class="row">تم پس‌زمینه</div><div class="opt"><button data-t="" style="background:#6a3d9a">بنفش</button><button data-t="green" style="background:#2a9d6f">سبز</button><button data-t="sunset" style="background:#f08a4b">غروب</button></div></div></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const ls={get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const APPS=[
+ {id:'game',n:'Strike Zone',i:'🎯',c:'#e63946',url:'https://jeyt082-sudo.github.io/strike-zone/'},
+ {id:'notes',n:'یادداشت',i:'📝',c:'#f4a261'},
+ {id:'calc',n:'ماشین‌حساب',i:'🧮',c:'#457b9d'},
+ {id:'cal',n:'تقویم',i:'📅',c:'#2a9d8f'},
+ {id:'music',n:'موسیقی',i:'🎵',c:'#9b5de5'},
+ {id:'set',n:'تنظیمات',i:'⚙️',c:'#6c757d'},
+ {id:'web',n:'مرورگر',i:'🌐',c:'#118ab2',url:'https://www.google.com'},
+ {id:'map',n:'نقشه',i:'🗺️',c:'#06a77d',url:'https://maps.google.com'},
+ {id:'yt',n:'ویدیو',i:'▶️',c:'#d62828',url:'https://www.youtube.com'},
+ {id:'mail',n:'ایمیل',i:'✉️',c:'#3a86ff',url:'https://mail.google.com'},
+ {id:'wiki',n:'ویکی‌پدیا',i:'📚',c:'#495057',url:'https://fa.wikipedia.org'},
+ {id:'tr',n:'مترجم',i:'🔤',c:'#fb8500',url:'https://translate.google.com'}
+];
+const DOCK=['game','web','music','set'];
+
+function btn(a){
+  const b=document.createElement('button');b.className='app';b.dataset.id=a.id;
+  b.innerHTML=`<div class="ic" style="background:${a.c}">${a.i}</div><span>${a.n}</span>`;
+  b.onclick=()=>openApp(a);return b;
+}
+function openApp(a){
+  if(a.url){window.open(a.url,'_blank','noopener');return}
+  $('#w-'+a.id).classList.add('open');
+  if(a.id==='cal')drawCal();
+}
+function render(list){
+  const P=$('#pages');P.innerHTML='';
+  for(let i=0;i<list.length;i+=12){
+    const pg=document.createElement('div');pg.className='page';
+    list.slice(i,i+12).forEach(a=>pg.appendChild(btn(a)));P.appendChild(pg);
+  }
+  const n=P.children.length;$('#dots').innerHTML=Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('');
+}
+render(APPS);
+DOCK.forEach(id=>$('#dock').appendChild(btn(APPS.find(a=>a.id===id))));
+$('#pages').addEventListener('scroll',e=>{
+  const i=Math.round(e.target.scrollLeft/e.target.clientWidth);
+  [...$('#dots').children].forEach((d,k)=>d.classList.toggle('on',k===i));
+});
+
+// search
+$('#search').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  render(q?APPS.filter(a=>a.n.toLowerCase().includes(q)):APPS);
+});
+$('#search').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.value.trim()){
+    const q=e.target.value.trim();
+    if(!APPS.some(a=>a.n.toLowerCase().includes(q.toLowerCase())))
+      window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank','noopener');
+  }
+});
+
+// close windows
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.win').classList.remove('open'));
+
+// clock
+function tick(){
+  const d=new Date();
+  $('#time').textContent=d.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit',hour12:false});
+  $('#date').textContent=d.toLocaleDateString('fa-IR',{weekday:'long',day:'numeric',month:'long'});
+}
+tick();setInterval(tick,10000);
+if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>$('#bat').textContent='🔋 '+fa(Math.round(b.level*100))+'٪';u();b.onlevelchange=u});
+
+// notes
+$('#notes').value=ls.get('notes','');
+$('#notes').oninput=e=>ls.set('notes',e.target.value);
+
+// calculator
+let expr='';
+'C ⌫ ( ) 7 8 9 ÷ 4 5 6 × 1 2 3 − 0 . = +'.split(' ').forEach(k=>{
+  const b=document.createElement('button');b.textContent=k;
+  if('÷×−+=C⌫'.includes(k))b.className='op';
+  b.onclick=()=>{
+    if(k==='C')expr='';
+    else if(k==='⌫')expr=expr.slice(0,-1);
+    else if(k==='='){
+      try{const r=Function('"use strict";return ('+expr.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-')+')')();expr=String(+(+r).toFixed(10))}catch(e){expr='خطا'}
+    } else {if(expr==='خطا')expr='';expr+=k}
+    $('#cout').textContent=expr||'0';
+  };
+  $('#ckeys').appendChild(b);
+});
+
+// calendar
+function drawCal(){
+  const d=new Date(),y=d.getFullYear(),m=d.getMonth();
+  $('#cal-h').textContent=d.toLocaleDateString('fa-IR',{month:'long',year:'numeric'});
+  const days=['ش','ی','د','س','چ','پ','ج'];
+  let h=days.map(x=>`<b>${x}</b>`).join('');
+  const first=(new Date(y,m,1).getDay()+1)%7,len=new Date(y,m+1,0).getDate();
+  for(let i=0;i<first;i++)h+='<span></span>';
+  for(let i=1;i<=len;i++)h+=`<span class="${i===d.getDate()?'today':''}">${fa(i)}</span>`;
+  $('#cal').innerHTML=h;
+}
+
+// music
+$('#mfile').onchange=e=>{
+  const fs=[...e.target.files];$('#mlist').innerHTML='';
+  fs.forEach(f=>{
+    const r=document.createElement('div');r.className='row';r.textContent='▶ '+f.name;r.style.cursor='pointer';
+    r.onclick=()=>{$('#player').src=URL.createObjectURL(f);$('#player').play()};
+    $('#mlist').appendChild(r);
+  });
+};
+
+// theme
+const setT=t=>{t?document.documentElement.dataset.t=t:delete document.documentElement.dataset.t;ls.set('theme',t)};
+setT(ls.get('theme',''));
+document.querySelectorAll('[data-t]').forEach(b=>{if(b.tagName==='BUTTON')b.onclick=()=>setT(b.dataset.t)});
+</script>
+</body>
+</html>
