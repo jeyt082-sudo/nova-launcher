@@ -43,6 +43,14 @@ jobs:
               <queries>
                   <package android:name="com.activision.callofduty.shooter"/>
                   <package android:name="com.garena.game.codm"/>
+                  <package android:name="com.roblox.client"/>
+                  <package android:name="com.instagram.android"/>
+                  <package android:name="com.platolite.android"/>
+                  <package android:name="com.miui.gallery"/>
+                  <intent>
+                      <action android:name="android.intent.action.MAIN"/>
+                      <category android:name="android.intent.category.LAUNCHER"/>
+                  </intent>
               </queries>
               <application android:label="@string/app_name" android:usesCleartextTraffic="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
@@ -67,6 +75,9 @@ jobs:
           import android.provider.Settings;
           import android.widget.Toast;
           import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.content.pm.ResolveInfo;
+          import android.provider.MediaStore;
           import android.net.Uri;
           import android.os.Bundle;
           import android.view.View;
@@ -75,6 +86,43 @@ jobs:
           public class MainActivity extends Activity {
               WebView web; ValueCallback<Uri[]> cb;
               class Bridge {
+                  @JavascriptInterface public void openByName(String name, String fallbackPkg) {
+                      runOnUiThread(() -> {
+                          try {
+                              PackageManager pm = getPackageManager();
+                              Intent q = new Intent(Intent.ACTION_MAIN);
+                              q.addCategory(Intent.CATEGORY_LAUNCHER);
+                              for (ResolveInfo ri : pm.queryIntentActivities(q, 0)) {
+                                  if (ri.loadLabel(pm).toString().toLowerCase().contains(name.toLowerCase())) {
+                                      Intent li = pm.getLaunchIntentForPackage(ri.activityInfo.packageName);
+                                      if (li != null) { startActivity(li); return; }
+                                  }
+                              }
+                          } catch (Exception e) {}
+                          openApp(fallbackPkg);
+                      });
+                  }
+                  @JavascriptInterface public void openSystem(String what) {
+                      runOnUiThread(() -> {
+                          try {
+                              if (what.equals("camera")) {
+                                  startActivity(new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA));
+                              } else if (what.equals("phone")) {
+                                  startActivity(new Intent(Intent.ACTION_DIAL));
+                              } else if (what.equals("gallery")) {
+                                  try {
+                                      Intent g1 = new Intent(Intent.ACTION_MAIN);
+                                      g1.addCategory(Intent.CATEGORY_APP_GALLERY);
+                                      startActivity(g1);
+                                  } catch (Exception e1) {
+                                      Intent g2 = getPackageManager().getLaunchIntentForPackage("com.miui.gallery");
+                                      if (g2 == null) { g2 = new Intent(Intent.ACTION_VIEW); g2.setType("image/*"); }
+                                      startActivity(g2);
+                                  }
+                              }
+                          } catch (Exception e) {}
+                      });
+                  }
                   @JavascriptInterface public void openApp(String pkg) {
                       runOnUiThread(() -> {
                           try {
@@ -136,50 +184,3 @@ jobs:
                       @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> c, FileChooserParams p) {
                           if (cb != null) cb.onReceiveValue(null);
                           cb = c;
-                          Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-                          i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("audio/*");
-                          i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                          startActivityForResult(i, 1); return true;
-                      }
-                  });
-                  web.addJavascriptInterface(new Bridge(), "NovaApp");
-                  web.loadUrl("file:///android_asset/index.html");
-              }
-              @Override protected void onActivityResult(int rq, int rs, Intent d) {
-                  if (rq == 1 && cb != null) {
-                      Uri[] r = null;
-                      if (rs == RESULT_OK && d != null) {
-                          if (d.getClipData() != null) {
-                              int n = d.getClipData().getItemCount(); r = new Uri[n];
-                              for (int i = 0; i < n; i++) r[i] = d.getClipData().getItemAt(i).getUri();
-                          } else if (d.getData() != null) r = new Uri[]{d.getData()};
-                      }
-                      cb.onReceiveValue(r); cb = null;
-                  }
-              }
-              @Override protected void onResume() {
-                  super.onResume();
-                  web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-              }
-              @Override public void onBackPressed() { /* launcher: stay home */ web.evaluateJavascript("document.querySelectorAll('.win.open').forEach(w=>w.classList.remove('open'))", null); }
-          }
-          EOF_NOVA
-          python3 - <<'EOF_PY'
-          p = "app/src/main/assets/index.html"
-          h = open(p, encoding="utf-8").read()
-          st = 'style="width:100%;border:0;color:inherit;font:inherit;text-align:right;cursor:pointer"'
-          btn1 = '<button id="mkdef" class="row" ' + st + '>⭐ تنظیم به‌عنوان لانچر پیش‌فرض</button>'
-          btn2 = '<button id="goback" class="row" ' + st + '>↩ بازگشت به لانچر قبلی</button>'
-          h = h.replace('<div class="row">تم پس‌زمینه</div>', btn1 + btn2 + '<div class="row">تم پس‌زمینه</div>', 1)
-          cod = "{id:'cod',n:'Call of Duty',i:'🪖',c:'#3d4a2a',pkg:'com.activision.callofduty.shooter'},"
-          h = h.replace("{id:'notes',n:'یادداشت',i:'📝',c:'#f4a261'},", cod + "{id:'notes',n:'یادداشت',i:'📝',c:'#f4a261'},", 1)
-          op = "function openApp(a){\n  if(a.pkg){if(window.NovaApp){NovaApp.openApp(a.pkg)}else{window.open('https://play.google.com/store/apps/details?id='+a.pkg,'_blank')}return}\n"
-          h = h.replace("function openApp(a){\n", op, 1)
-          js = "document.getElementById('mkdef').onclick=function(){if(window.NovaApp){NovaApp.setDefault()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};document.getElementById('goback').onclick=function(){if(window.NovaApp){NovaApp.openHomeSettings()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};"
-          i = h.rfind('</script>')
-          h = h[:i] + js + '\n' + h[i:]
-          open(p, "w", encoding="utf-8").write(h)
-          EOF_PY
-      - run: gradle assembleDebug
-      - uses: actions/upload-artifact@v4
-        with: { name: NovaLauncher-apk, path: app/build/outputs/apk/debug/app-debug.apk }
