@@ -40,6 +40,10 @@ jobs:
           cat > app/src/main/AndroidManifest.xml <<'EOF_NOVA'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET"/>
+              <queries>
+                  <package android:name="com.activision.callofduty.shooter"/>
+                  <package android:name="com.garena.game.codm"/>
+              </queries>
               <application android:label="@string/app_name" android:usesCleartextTraffic="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
                       android:configChanges="orientation|screenSize|keyboardHidden" android:stateNotNeeded="true">
@@ -71,6 +75,17 @@ jobs:
           public class MainActivity extends Activity {
               WebView web; ValueCallback<Uri[]> cb;
               class Bridge {
+                  @JavascriptInterface public void openApp(String pkg) {
+                      runOnUiThread(() -> {
+                          try {
+                              Intent li = getPackageManager().getLaunchIntentForPackage(pkg);
+                              if (li == null && pkg.equals("com.activision.callofduty.shooter")) li = getPackageManager().getLaunchIntentForPackage("com.garena.game.codm");
+                              if (li != null) { startActivity(li); return; }
+                              try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + pkg))); }
+                              catch (Exception e) { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + pkg))); }
+                          } catch (Exception e) {}
+                      });
+                  }
                   @JavascriptInterface public void openHomeSettings() {
                       runOnUiThread(() -> {
                           try {
@@ -156,6 +171,10 @@ jobs:
           btn1 = '<button id="mkdef" class="row" ' + st + '>⭐ تنظیم به‌عنوان لانچر پیش‌فرض</button>'
           btn2 = '<button id="goback" class="row" ' + st + '>↩ بازگشت به لانچر قبلی</button>'
           h = h.replace('<div class="row">تم پس‌زمینه</div>', btn1 + btn2 + '<div class="row">تم پس‌زمینه</div>', 1)
+          cod = "{id:'cod',n:'Call of Duty',i:'🪖',c:'#3d4a2a',pkg:'com.activision.callofduty.shooter'},"
+          h = h.replace("{id:'notes',n:'یادداشت',i:'📝',c:'#f4a261'},", cod + "{id:'notes',n:'یادداشت',i:'📝',c:'#f4a261'},", 1)
+          op = "function openApp(a){\n  if(a.pkg){if(window.NovaApp){NovaApp.openApp(a.pkg)}else{window.open('https://play.google.com/store/apps/details?id='+a.pkg,'_blank')}return}\n"
+          h = h.replace("function openApp(a){\n", op, 1)
           js = "document.getElementById('mkdef').onclick=function(){if(window.NovaApp){NovaApp.setDefault()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};document.getElementById('goback').onclick=function(){if(window.NovaApp){NovaApp.openHomeSettings()}else{alert('این دکمه فقط در برنامه‌ی نصب‌شده کار می‌کند')}};"
           i = h.rfind('</script>')
           h = h[:i] + js + '\n' + h[i:]
