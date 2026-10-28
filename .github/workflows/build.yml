@@ -86,6 +86,35 @@ jobs:
           public class MainActivity extends Activity {
               WebView web; ValueCallback<Uri[]> cb;
               class Bridge {
+                  @JavascriptInterface public String getApps() {
+                      try {
+                          PackageManager pm = getPackageManager();
+                          Intent q = new Intent(Intent.ACTION_MAIN);
+                          q.addCategory(Intent.CATEGORY_LAUNCHER);
+                          java.util.List<ResolveInfo> list = pm.queryIntentActivities(q, 0);
+                          java.util.Collections.sort(list, new ResolveInfo.DisplayNameComparator(pm));
+                          org.json.JSONArray arr = new org.json.JSONArray();
+                          java.util.HashSet<String> seen = new java.util.HashSet<>();
+                          for (ResolveInfo ri : list) {
+                              String p = ri.activityInfo.packageName;
+                              if (p.equals(getPackageName()) || !seen.add(p)) continue;
+                              android.graphics.drawable.Drawable d = ri.loadIcon(pm);
+                              int sz = 96;
+                              android.graphics.Bitmap bm = android.graphics.Bitmap.createBitmap(sz, sz, android.graphics.Bitmap.Config.ARGB_8888);
+                              android.graphics.Canvas cv = new android.graphics.Canvas(bm);
+                              d.setBounds(0, 0, sz, sz);
+                              d.draw(cv);
+                              java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                              bm.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, bo);
+                              org.json.JSONObject o = new org.json.JSONObject();
+                              o.put("n", ri.loadLabel(pm).toString());
+                              o.put("p", p);
+                              o.put("i", android.util.Base64.encodeToString(bo.toByteArray(), android.util.Base64.NO_WRAP));
+                              arr.put(o);
+                          }
+                          return arr.toString();
+                      } catch (Exception e) { return "[]"; }
+                  }
                   @JavascriptInterface public void openByName(String name, String fallbackPkg) {
                       runOnUiThread(() -> {
                           try {
@@ -238,6 +267,37 @@ jobs:
           h = h[:i] + js + '\n' + h[i:]
           open(p, "w", encoding="utf-8").write(h)
           EOF_PY
+          python3 - <<'EOF_PY2'
+          p = "app/src/main/assets/index.html"
+          h = open(p, encoding="utf-8").read()
+          css = ".agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px;margin-top:12px}.agrid .app{color:inherit;font-size:11px}.aic{width:52px;height:52px;border-radius:12px}.agrid span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
+          h = h.replace("</style>", css + "</style>", 1)
+          win = '<div class="win" id="w-apps"><div class="bar"><button data-close>→</button>همه برنامه‌ها</div><div class="body"><input id="asearch" placeholder="جستجو…" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(128,128,128,.4);background:transparent;color:inherit;font:inherit"><div id="agrid" class="agrid"></div></div></div>'
+          h = h.replace('<div class="win" id="w-set">', win + '<div class="win" id="w-set">', 1)
+          h = h.replace("{id:'tel',", "{id:'apps',n:'همه برنامه‌ها',i:'📱',c:'#37474f'},{id:'tel',", 1)
+          h = h.replace("const DOCK=['tel','web','gal','cam'];", "const DOCK=['tel','web','apps','gal','cam'];", 1)
+          h = h.replace("function openApp(a){\n", "function openApp(a){\n  if(a.id==='apps'){document.getElementById('w-apps').classList.add('open');drawApps('');return}\n", 1)
+          js = """var INST=null;
+          function loadInst(){if(INST===null){try{INST=(window.NovaApp&&NovaApp.getApps)?JSON.parse(NovaApp.getApps()):[]}catch(e){INST=[]}}return INST}
+          function drawApps(q){
+            var list=loadInst(),g=document.getElementById('agrid');g.innerHTML='';
+            q=(q||'').toLowerCase();
+            var shown=list.filter(function(a){return !q||a.n.toLowerCase().indexOf(q)>-1});
+            shown.forEach(function(a){
+              var b=document.createElement('button');b.className='app';
+              b.innerHTML='<img class="aic" src="data:image/png;base64,'+a.i+'"><span></span>';
+              b.querySelector('span').textContent=a.n;
+              b.onclick=function(){NovaApp.openApp(a.p)};
+              g.appendChild(b);
+            });
+            if(!shown.length){g.textContent=window.NovaApp?'برنامه‌ای پیدا نشد':'این بخش فقط در نسخه‌ی نصب‌شده کار می‌کند'}
+          }
+          document.getElementById('asearch').oninput=function(e){drawApps(e.target.value)};
+          """
+          i = h.rfind('</script>')
+          h = h[:i] + js + h[i:]
+          open(p, "w", encoding="utf-8").write(h)
+          EOF_PY2
       - run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with: { name: NovaLauncher-apk, path: app/build/outputs/apk/debug/app-debug.apk }
