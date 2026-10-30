@@ -30,12 +30,34 @@ jobs:
           android {
               namespace 'com.nova.launcher'
               compileSdk 34
-              defaultConfig { applicationId "com.nova.launcher"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }
+              defaultConfig { applicationId "com.nova.launcher"; minSdk 26; targetSdk 34; versionCode 1; versionName "1.0" }
               compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
           }
           EOF_NOVA
           cat > app/src/main/res/values/strings.xml <<'EOF_NOVA'
           <resources><string name="app_name">Nova Launcher</string></resources>
+          EOF_NOVA
+          mkdir -p $(dirname app/src/main/res/values/colors.xml)
+          cat > app/src/main/res/values/colors.xml <<'EOF_NOVA'
+          <resources><color name="ic_bg">#3A2A78</color></resources>
+          EOF_NOVA
+          mkdir -p $(dirname app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml)
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF_NOVA'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_bg"/>
+              <foreground android:drawable="@drawable/ic_fg"/>
+              <monochrome android:drawable="@drawable/ic_fg"/>
+          </adaptive-icon>
+          EOF_NOVA
+          mkdir -p $(dirname app/src/main/res/drawable/ic_fg.xml)
+          cat > app/src/main/res/drawable/ic_fg.xml <<'EOF_NOVA'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+              <path android:fillColor="#FFFFFF" android:pathData="M38,34h8v40h-8z"/>
+              <path android:fillColor="#FFFFFF" android:pathData="M62,34h8v40h-8z"/>
+              <path android:fillColor="#FFFFFF" android:pathData="M38,34h8l24,40h-8z"/>
+              <path android:fillColor="#FFC857" android:pathData="M76,30m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+          </vector>
           EOF_NOVA
           cat > app/src/main/AndroidManifest.xml <<'EOF_NOVA'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -52,7 +74,7 @@ jobs:
                       <category android:name="android.intent.category.LAUNCHER"/>
                   </intent>
               </queries>
-              <application android:label="@string/app_name" android:usesCleartextTraffic="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:usesCleartextTraffic="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
                       android:configChanges="orientation|screenSize|keyboardHidden" android:stateNotNeeded="true">
                       <intent-filter>
@@ -167,3 +189,48 @@ jobs:
                       runOnUiThread(() -> {
                           try {
                               startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+                          } catch (Exception e) {
+                              try { startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)); } catch (Exception e2) {
+                                  try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception e3) {}
+                              }
+                          }
+                      });
+                  }
+                  @JavascriptInterface public void setDefault() {
+                      runOnUiThread(() -> {
+                          try {
+                              if (Build.VERSION.SDK_INT >= 29) {
+                                  RoleManager rm = (RoleManager) getSystemService(Context.ROLE_SERVICE);
+                                  if (rm.isRoleHeld(RoleManager.ROLE_HOME)) {
+                                      Toast.makeText(MainActivity.this, "Nova Launcher is already the default", Toast.LENGTH_LONG).show();
+                                      return;
+                                  }
+                                  if (rm.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                                      startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_HOME), 2);
+                                      return;
+                                  }
+                              }
+                              startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+                          } catch (Exception e) {
+                              try { startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)); } catch (Exception e2) {}
+                          }
+                      });
+                  }
+              }
+              @Override protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+                  web = new WebView(this);
+                  setContentView(web);
+                  WebSettings s = web.getSettings();
+                  s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+                  s.setMediaPlaybackRequiresUserGesture(false);
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
+                          String u = r.getUrl().toString();
+                          if (u.startsWith("file:")) return false;
+                          startActivity(new Intent(Intent.ACTION_VIEW, r.getUrl())); return true;
+                      }
+                  });
+                  web.setWebChromeClient(new WebChromeClient() {
+                      @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> c, FileChooserParams p) {
+                          if (cb != null) cb.onReceiveValue(null);
