@@ -206,6 +206,13 @@ public class MainActivity extends Activity {
     }
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        if (Build.VERSION.SDK_INT >= 28) {
+            android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
         web = new WebView(this);
         setContentView(web);
         WebSettings s = web.getSettings();
@@ -245,7 +252,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onResume() {
         super.onResume();
-        web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
     @Override public void onBackPressed() { /* launcher: stay home */ web.evaluateJavascript("document.querySelectorAll('.win.open').forEach(w=>w.classList.remove('open'))", null); }
 }
@@ -280,6 +287,11 @@ python3 - <<'EOF_PY2'
 p = "app/src/main/assets/index.html"
 h = open(p, encoding="utf-8").read()
 h = h.replace("const APPS=[", "var APPS=[", 1)
+h = h.replace("</style>", "#status{background:#FFD400;color:#1a1a1a;font-weight:bold;padding-top:10px}</style>", 1)
+ob = "const u=()=>$('#bat').textContent='🔋 '+fa(Math.round(b.level*100))+'٪';u();b.onlevelchange=u"
+nb = "const u=()=>$('#bat').textContent=(b.charging?'⚡ ':'🔋 ')+fa(Math.round(b.level*100))+'٪';u();b.onlevelchange=u;b.onchargingchange=u"
+assert ob in h
+h = h.replace(ob, nb, 1)
 old = """${a.i}</div><span>"""
 new = """${a.icon?'<img src="data:image/png;base64,'+a.icon+'" style="width:58px;height:58px;border-radius:16px">':a.i}</div><span>"""
 assert old in h
