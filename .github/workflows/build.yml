@@ -298,6 +298,30 @@ jobs:
           h = h[:i] + js + h[i:]
           open(p, "w", encoding="utf-8").write(h)
           EOF_PY2
+          python3 - <<'EOF_PY3'
+          p = "app/src/main/assets/index.html"
+          h = open(p, encoding="utf-8").read()
+          h = h.replace("const APPS=[", "var APPS=[", 1)
+          old = """${a.i}</div><span>"""
+          new = """${a.icon?'<img src="data:image/png;base64,'+a.icon+'" style="width:58px;height:58px;border-radius:16px">':a.i}</div><span>"""
+          assert old in h
+          h = h.replace(old, new, 1)
+          js = """(function(){
+            if(!(window.NovaApp&&NovaApp.getApps))return;
+            var inst=loadInst();
+            if(!inst.length)return;
+            var keep=['game'];
+            var base=APPS.filter(function(a){return keep.indexOf(a.id)>-1});
+            var more=inst.map(function(a){return {id:'i_'+a.p,n:a.n,i:'',icon:a.i,c:'transparent',pkg:a.p}});
+            APPS=base.concat(more);
+            render(APPS);
+          })();
+          document.getElementById('clock').onclick=function(){document.getElementById('w-set').classList.add('open')};
+          """
+          i = h.rfind('</script>')
+          h = h[:i] + js + h[i:]
+          open(p, "w", encoding="utf-8").write(h)
+          EOF_PY3
       - run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with: { name: NovaLauncher-apk, path: app/build/outputs/apk/debug/app-debug.apk }
